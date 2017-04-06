@@ -30,6 +30,7 @@ export default class IList extends Component {
         //rowHasChanged: (r1, r2) => r1.article_id !== r2.article_id
         rowHasChanged: (r1, r2) => true
       }),
+      dataSet: [],
       currentSize: Number.MAX_VALUE,
       limit: 0,
       page: 0,
@@ -147,13 +148,15 @@ export default class IList extends Component {
     const {page, limit} = pagination;
     const currentSize = result.length;
     IndexStore.store(Consts.KEY_STORAGE_CURRENT_PAGE, page);
+    const dataSet = this.state.dataSet.concat(result);
     this.setState(Util.mix(this.state, {
       status: 0,
       loading: false,
       currentSize,
       page,
       limit,
-      dataSource: this.state.dataSource.cloneWithRows(result)
+      dataSet,
+      dataSource: this.state.dataSource.cloneWithRows(dataSet)
     }));
   }
 

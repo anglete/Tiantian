@@ -95,8 +95,6 @@ export default new class {
       formData.append("files", file);   //这里的files就是后台需要的key
     }
     url = this.buildUrl(url);
-    console.log(filePathArr);
-    console.log(url);
     const response = await fetch(url, {
       method: 'POST',
       headers: {

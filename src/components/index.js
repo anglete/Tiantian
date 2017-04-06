@@ -68,7 +68,7 @@ export default class Index extends Component {
    * destroy
    */
   componentWillUnmount() {
-    IndexStore.addListener(Consts.KEY_EVENT_CHANGE_KEY_WORD);
+    IndexStore.removeListener(Consts.KEY_EVENT_CHANGE_KEY_WORD);
   }
 
   __refreshPage(data) {
@@ -77,8 +77,6 @@ export default class Index extends Component {
 
 
   render() {
-    console.log('render');
-    console.log(this.state);
     const { navigate } = this.props.navigation;
     const keyWord = this.state.keyWord;
 

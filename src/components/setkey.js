@@ -40,9 +40,9 @@ export default class SetKey extends Component {
     AudioRecorder.prepareRecordingAtPath(audioPath, {
       SampleRate: 22050,
       Channels: 1,
-      AudioQuality: "Low",
+      AudioQuality: "High",
       AudioEncoding: "aac",
-      AudioEncodingBitRate: 32000
+      AudioEncodingBitRate: 16000
     });
   }
 
