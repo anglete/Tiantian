@@ -6,7 +6,12 @@ import React, { Component } from 'react';
 import {
     StyleSheet,
     Text,
-    View
+    View,
+    TouchableHighlight,
+    Platform,
+    PermissionsAndroid,
+    Alert,
+    NativeModules
 } from 'react-native';
 import {AudioRecorder, AudioUtils} from 'react-native-audio';
 
@@ -58,17 +63,6 @@ export default class SetKey extends Component {
         });
   }
 
-  _renderButton(title, onPress, active) {
-    var style = (active) ? styles.activeButtonText : styles.buttonText;
-
-    return (
-        <TouchableHighlight style={styles.button} onPress={onPress}>
-          <Text style={style}>
-            {title}
-          </Text>
-        </TouchableHighlight>
-    );
-  }
 
   async _pause() {
     if (!this.state.recording) {
@@ -175,15 +169,24 @@ export default class SetKey extends Component {
   }
 
   componentDidMount() {
-    const audioPath = AudioUtils.DocumentDirectoryPath + '/test.aac';
-    AudioRecorder.prepareRecordingAtPath(audioPath, {
-      SampleRate: 22050,
-      Channels: 1,
-      AudioQuality: "Low",
-      AudioEncoding: "aac"
-    });
+    this._checkPermission().then((hasPermission) => {
+      this.setState({ hasPermission });
 
-    SetKeyAction.setKey('梅西');
+      if (!hasPermission) return;
+
+      this.prepareRecordingPath(this.state.audioPath);
+
+      AudioRecorder.onProgress = (data) => {
+        this.setState({currentTime: Math.floor(data.currentTime)});
+      };
+
+      AudioRecorder.onFinished = (data) => {
+        // Android callback comes in the form of a promise instead.
+        if (Platform.OS === 'ios') {
+          this._finishRecording(data.status === "OK", data.audioFileURL);
+        }
+      };
+    });
   }
 
   /**
@@ -212,12 +215,32 @@ export default class SetKey extends Component {
 
   }
 
+  _longPress() {
+    console.log('_longPress');
+    this._record();
+  }
+
+  _onPressIn() {
+    console.log('onPressIn');
+  }
+
+  async _onPressOut() {
+    const filePath = await this._stop();
+    SetKeyAction.setKey(filePath);
+  }
+
   render() {
     return (
         <View style={styles.container}>
+          <TouchableHighlight
+              onLongPress={this._longPress.bind(this)}
+              onPressIn={this._onPressIn.bind(this)}
+              onPressOut={this._onPressOut.bind(this)}
+              >
           <Text style={styles.welcome}>
-            搜索关键词设置
+            点击录制关键词
           </Text>
+          </TouchableHighlight>
           <Text style={styles.instructions}>
             请录音您要搜索的关键词
           </Text>

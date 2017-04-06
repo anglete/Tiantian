@@ -21,7 +21,9 @@ export default new class extends BaseAction {
    * @param keyWord
    * @returns {*}
    */
-  async setKey(keyWord) {
+  async setKey(filePath) {
+    const res = await HttpUtil.uploadFile('/sentence/text', [filePath]);
+    const keyWord = res.json.result;
     this.dispatch(ActionType.INDEX_SET_KEY_WORD, keyWord);
   }
 
