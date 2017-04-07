@@ -81,7 +81,7 @@ export default class SetKey extends Component {
       }
       return filePath;
     } catch (error) {
-      console.error(error);
+      console.log(error);
     }
   }
 

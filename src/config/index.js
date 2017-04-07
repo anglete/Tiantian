@@ -5,7 +5,7 @@
 
 const config = {
 	'page.size': 20,
-	'base.url': 'http://192.168.202.3:5050'
+	'base.url': 'http://app1.hkn.tinfinite.com'
 }
 
 

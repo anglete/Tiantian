@@ -31,7 +31,6 @@ export default class Index extends Component {
 
   constructor() {
     super();
-    console.log('index ------------------->');
     const keyWord = IndexStore.load(Consts.KEY_STORAGE_KEY_WORD) || '';
     this.state = {
       keyWord
@@ -82,14 +81,14 @@ export default class Index extends Component {
 
     return (
         <Grid>
-          <Row size={10}>
+          <Row size={5}>
             <Col><Text>{keyWord ? '当前搜索关键词：' + keyWord : '当前未设置搜索关键词'}</Text></Col>
-            <Col><Button raised icon={{name: 'cached'}} title='设置搜索关键词'
+            <Col><Button icon={{name: 'cached'}} title='设置搜索关键词'
                          onPress={() => navigate('SetKey')}
                 /></Col>
           </Row>
 
-          <Row size={90}>
+          <Row size={95}>
               <Col>
                 <List keyWord={keyWord} navigation={this.props.navigation}/>
               </Col>
