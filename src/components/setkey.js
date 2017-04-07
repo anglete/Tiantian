@@ -64,30 +64,10 @@ export default class SetKey extends Component {
   }
 
 
-  async _pause() {
-    if (!this.state.recording) {
-      console.warn('Can\'t pause, not recording!');
-      return;
-    }
-
-    this.setState({stoppedRecording: true, recording: false});
-
-    try {
-      const filePath = await AudioRecorder.pauseRecording();
-
-      // Pause is currently equivalent to stop on Android.
-      if (Platform.OS === 'android') {
-        this._finishRecording(true, filePath);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   async _stop() {
     if (!this.state.recording) {
       console.warn('Can\'t stop, not recording!');
-      return;
+      return null;
     }
 
     this.setState({stoppedRecording: true, recording: false});
@@ -128,34 +108,6 @@ export default class SetKey extends Component {
     }
   }
 
-  _doupload() {
-    console.log('start uploading----->');
-    const files = [{
-      name: 'test',
-      filename: 'upload.aac',
-      filepath: this.state.audioPath,
-      filetype: null,
-    }];
-    const options = {
-      url: 'http://192.168.202.3:5050/sentence/text',
-      files,
-      method: 'POST',
-    };
-    RNUploader.upload(options, (err, response) => {
-      if (err) {
-        console.log('upload err--->', err)
-        return;
-      }
-      console.log('response--->', response.data);
-      Alert.alert(
-          'Alert Title',
-          response.data,
-          [
-            {text: 'OK', onPress: () => console.log('OK Pressed')},
-          ]
-      )
-    });
-  }
 
   _finishRecording(didSucceed, filePath) {
     this.setState({ finished: didSucceed });
@@ -215,18 +167,33 @@ export default class SetKey extends Component {
 
   }
 
+  /**
+   *
+   * @private
+   */
   _longPress() {
-    console.log('_longPress');
     this._record();
   }
 
+  /**
+   *
+   * @private
+   */
   _onPressIn() {
     console.log('onPressIn');
   }
 
+  /**
+   *
+   * @private
+   */
   async _onPressOut() {
     const filePath = await this._stop();
-    SetKeyAction.setKey(filePath);
+    if (filePath) {
+      await SetKeyAction.setKey(filePath);
+      const { goBack } = this.props.navigation;
+      goBack();
+    }
   }
 
   render() {

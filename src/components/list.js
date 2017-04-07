@@ -22,8 +22,6 @@ export default class IList extends Component {
   constructor(props) {
     super(props);
 
-    console.log('keyword: ' + this.props.keyWord);
-
     this.state = {
       keyWord: this.props.keyWord,
       dataSource: new ListView.DataSource({
@@ -50,8 +48,18 @@ export default class IList extends Component {
   /**
    * runtime
    */
-  componentWillReceiveProps(nextProps) {
-
+  componentWillReceiveProps(nextProps) { // update by parent component change
+    const keyWord = nextProps.keyWord;
+    this.setState(Util.mix(this.state, {
+      keyWord,
+      page: 0,
+      limit: 0,
+      dataSet: [],
+      currentSize: Number.MAX_VALUE,
+      status:0,
+      loading: false
+    }));
+    IndexAction.getList(1, keyWord);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -59,7 +67,6 @@ export default class IList extends Component {
   }
 
   componentWillUpdate(nextProps, nextState) {
-
   }
 
   componentDidUpdate(prevProps, prevState) {
