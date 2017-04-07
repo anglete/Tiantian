@@ -10,12 +10,12 @@ import {
     TouchableHighlight,
     Platform,
     PermissionsAndroid,
-    Alert,
-    NativeModules
+    ActivityIndicator
 } from 'react-native';
 import {AudioRecorder, AudioUtils} from 'react-native-audio';
 
 import SetKeyAction from 'SetKeyAction';
+import Util from 'Util';
 
 
 export default class SetKey extends Component {
@@ -27,6 +27,7 @@ export default class SetKey extends Component {
     super();
     const temp = new Date().getTime();
     this.state = {
+      loading: false,
       currentTime: 0.0,
       recording: false,
       stoppedRecording: false,
@@ -95,7 +96,7 @@ export default class SetKey extends Component {
       return;
     }
 
-    if(this.state.stoppedRecording){
+    if (this.state.stoppedRecording) {
       this.prepareRecordingPath(this.state.audioPath);
     }
 
@@ -110,10 +111,9 @@ export default class SetKey extends Component {
 
 
   _finishRecording(didSucceed, filePath) {
-    this.setState({ finished: didSucceed });
+    this.setState({finished: didSucceed});
     console.log(`Finished recording of duration ${this.state.currentTime} seconds at path: ${filePath}`);
   }
-
 
 
   componentWillMount() {
@@ -122,7 +122,7 @@ export default class SetKey extends Component {
 
   componentDidMount() {
     this._checkPermission().then((hasPermission) => {
-      this.setState({ hasPermission });
+      this.setState({hasPermission});
 
       if (!hasPermission) return;
 
@@ -190,6 +190,7 @@ export default class SetKey extends Component {
   async _onPressOut() {
     const filePath = await this._stop();
     if (filePath) {
+      this.setState(Util.mix(this.state, {loading: true}));
       await SetKeyAction.setKey(filePath);
       const { goBack } = this.props.navigation;
       goBack();
@@ -197,6 +198,20 @@ export default class SetKey extends Component {
   }
 
   render() {
+    if (this.state.loading) {
+      return (
+          <View>
+            <ActivityIndicator
+                animating={true}
+                style={{height: 80}}
+                size="large"
+                />
+            <Text style={styles.welcome}>
+              处理中...
+            </Text>
+          </View>
+      );
+    }
     return (
         <View style={styles.container}>
           <TouchableHighlight
@@ -204,9 +219,9 @@ export default class SetKey extends Component {
               onPressIn={this._onPressIn.bind(this)}
               onPressOut={this._onPressOut.bind(this)}
               >
-          <Text style={styles.welcome}>
-            点击录制关键词
-          </Text>
+            <Text style={styles.welcome}>
+              点击录制关键词
+            </Text>
           </TouchableHighlight>
           <Text style={styles.instructions}>
             请录音您要搜索的关键词
@@ -224,17 +239,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#F5FCFF'
   },
   welcome: {
     fontSize: 20,
     textAlign: 'center',
-    margin: 10,
+    margin: 10
   },
   instructions: {
     textAlign: 'center',
     color: '#333333',
-    marginBottom: 5,
+    marginBottom: 5
   },
 });
 
