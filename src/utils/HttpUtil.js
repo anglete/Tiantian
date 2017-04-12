@@ -91,7 +91,12 @@ export default new class {
   async uploadFile(url, filePathArr, options = {'Response-type': 'json'}) {
     let formData = new FormData();
     for (var i = 0; i < filePathArr.length; i++) {
-      let file = {uri: 'file://' + filePathArr[i], type: 'multipart/form-data', name: 'file.acc'};   //这里的key(uri和type和name)不能改变,
+      let filePath = filePathArr[i];
+      if(!filePath.startsWith('file://')) {
+        filePath = `file://${filePath}`;
+      }
+      console.log(filePath);
+      let file = {uri: filePath, type: 'multipart/form-data', name: 'file.acc'};   //这里的key(uri和type和name)不能改变,
       formData.append("files", file);   //这里的files就是后台需要的key
     }
     url = this.buildUrl(url);

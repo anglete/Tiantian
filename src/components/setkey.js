@@ -189,9 +189,9 @@ export default class SetKey extends Component {
    */
   async _onPressOut() {
     const filePath = await this._stop();
-    if (filePath) {
+    if (filePath !== null) {
       this.setState(Util.mix(this.state, {loading: true}));
-      await SetKeyAction.setKey(filePath);
+      await SetKeyAction.setKey(this.state.audioPath);
       const { goBack } = this.props.navigation;
       goBack();
     }
