@@ -8,20 +8,25 @@ import React, { Component } from 'react';
 import {
     StyleSheet,
     Text,
-    View
+    View,
+    TouchableHighlight
 } from 'react-native';
 //
 import {
     Button,
     Grid,
     Row,
-    Col
+    Col,
+    Tile
 } from 'react-native-elements';
 
 import IndexStore from 'IndexStore';
+import KeyWordsStore from 'KeyWordsStore';
 import Consts from 'Consts';
 import Util from 'Util';
 import List from './list';
+
+import Keywords from './keywords';
 
 export default class Index extends Component {
 
@@ -31,14 +36,15 @@ export default class Index extends Component {
 
   constructor() {
     super();
-    const keyWord = IndexStore.load(Consts.KEY_STORAGE_KEY_WORD) || '';
     this.state = {
-      keyWord
+      keyWords: []
     };
   }
 
-  componentWillMount() {
-    IndexStore.addListener(Consts.KEY_EVENT_CHANGE_KEY_WORD, this.__refreshPage.bind(this));
+  async componentWillMount() {
+    KeyWordsStore.addListener(Consts.KEY_EVENT_CHANGE_KEY_WORD, this.__refreshPage.bind(this));
+    const keyWords = await KeyWordsStore.get(Consts.KEY_STORAGE_CURRENT_KEYWORDS, []);
+    this.setState(Util.mix(this.state, {keyWords}));
   }
 
   componentDidMount() {
@@ -67,32 +73,64 @@ export default class Index extends Component {
    * destroy
    */
   componentWillUnmount() {
-    IndexStore.removeListener(Consts.KEY_EVENT_CHANGE_KEY_WORD);
+    KeyWordsStore.removeListener(Consts.KEY_EVENT_CHANGE_KEY_WORD);
   }
 
-  __refreshPage(data) {
-    this.setState(Util.mix(this.state, {keyWord: data}));
+  /**
+   *
+   * @private
+   */
+  async __refreshPage() {
+    const keyWords = await KeyWordsStore.get(Consts.KEY_STORAGE_CURRENT_KEYWORDS, []);
+    this.setState(Util.mix(this.state, {keyWords}));
+    if (this.__keyWordPannel) {
+      this.__keyWordPannel.hide();
+    }
+  }
+
+  /**
+   *
+   * @private
+   */
+  __showKeywordsPannel() {
+    if (this.__keyWordPannel) {
+      this.__keyWordPannel.show();
+    }
   }
 
 
   render() {
-    const { navigate } = this.props.navigation;
-    const keyWord = this.state.keyWord;
+    const keyWords = this.state.keyWords || [''];
+    let keyWordStr = '';
+    for (const keyWord of keyWords) {
+      keyWordStr += `${keyWord} `;
+    }
+    keyWordStr = keyWordStr.replace(/\s$/, '');
+
+    const rows = [];
+    rows.push(
+        <Row size={5}>
+          <Col size={100}>
+            <Text>{keyWordStr}</Text>
+          </Col>
+          <Col size={5}>
+            <TouchableHighlight onPress={this.__showKeywordsPannel.bind(this)}>
+              <Text>＋</Text>
+            </TouchableHighlight>
+          </Col>
+        </Row>
+    );
+
+    rows.push(<Row size={95}>
+      <Col>
+        <List keyWord={keyWordStr} navigation={this.props.navigation}/>
+      </Col>
+    </Row>);
 
     return (
         <Grid>
-          <Row size={5}>
-            <Col><Text>{keyWord ? '当前搜索关键词：' + keyWord : '当前未设置搜索关键词'}</Text></Col>
-            <Col><Button icon={{name: 'cached'}} title='设置搜索关键词'
-                         onPress={() => navigate('SetKey')}
-                /></Col>
-          </Row>
-
-          <Row size={95}>
-              <Col>
-                <List keyWord={keyWord} navigation={this.props.navigation}/>
-              </Col>
-          </Row>
+          {rows}
+          <Keywords ref={c => this.__keyWordPannel=c} navigation={this.props.navigation}/>
         </Grid>
     );
   }

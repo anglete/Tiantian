@@ -12,10 +12,22 @@ import {
     PermissionsAndroid,
     ActivityIndicator
 } from 'react-native';
+
+import {
+    FormLabel,
+    FormInput,
+    Button,
+    Grid,
+    Row,
+    Col
+} from 'react-native-elements'
+
 import {AudioRecorder, AudioUtils} from 'react-native-audio';
 
 import SetKeyAction from 'SetKeyAction';
+import KeyWordsStore from 'KeyWordsStore';
 import Util from 'Util';
+import Consts from 'Consts';
 
 
 export default class SetKey extends Component {
@@ -27,7 +39,7 @@ export default class SetKey extends Component {
     super();
     const temp = new Date().getTime();
     this.state = {
-      loading: false,
+      pageStatus: 10, // 10：文本输入， 20：语音输入， 21：语音输入处理页面， 22：语音输入结果确认页面
       currentTime: 0.0,
       recording: false,
       stoppedRecording: false,
@@ -117,7 +129,7 @@ export default class SetKey extends Component {
 
 
   componentWillMount() {
-
+    KeyWordsStore.addListener(Consts.KEY_EVENT_SET_AUDIO_KEY_WORD, this._confirmAudioKeyWord.bind(this));
   }
 
   componentDidMount() {
@@ -190,15 +202,109 @@ export default class SetKey extends Component {
   async _onPressOut() {
     const filePath = await this._stop();
     if (filePath !== null) {
-      this.setState(Util.mix(this.state, {loading: true}));
-      await SetKeyAction.setKey(this.state.audioPath);
-      const { goBack } = this.props.navigation;
-      goBack();
+      this.setState(Util.mix(this.state, {pageStatus: 21}));
+      await SetKeyAction.setAudioKey(this.state.audioPath);
     }
   }
 
+  /**
+   *
+   * @private
+   */
+  async _submit() {
+    await SetKeyAction.setKey(this.state.keyWordValue);
+    const { goBack } = this.props.navigation;
+    goBack();
+  }
+
+  /**
+   *
+   * @private
+   */
+  async _toAudio() {
+    this.setState(Util.mix(this.state, {
+      pageStatus: 20
+    }));
+  }
+
+  /**
+   *
+   * @private
+   */
+  async _toText() {
+    this.setState(Util.mix(this.state, {
+      pageStatus: 10
+    }));
+  }
+
+  /**
+   *
+   * @param data
+   * @private
+   */
+  _confirmAudioKeyWord(data){
+    this.setState(Util.mix(this.state, {
+      pageStatus: 22,
+      say: data.say,
+      keyWordValue: data.keyWord
+    }));
+  }
+
+
   render() {
-    if (this.state.loading) {
+    if (this.state.pageStatus === 10) {
+      return (
+          <Grid>
+            <Row>
+              <Col>
+                <Button icon={{name: 'cached'}} title='语音'
+                        onPress={this._toAudio.bind(this)}
+                    />
+              </Col>
+              <Col>
+                <FormInput ref='keyWordInput' placeholder='输入关键字'
+                           onChangeText={(value) => this.state.keyWordValue=value}/>
+              </Col>
+              <Col>
+                <Button icon={{name: 'cached'}} title='提交'
+                        onPress={this._submit.bind(this)}
+                    />
+              </Col>
+            </Row>
+          </Grid>
+      );
+    }
+
+    if (this.state.pageStatus === 20) {
+      return (
+          <View style={styles.container}>
+            <TouchableHighlight
+                onLongPress={this._longPress.bind(this)}
+                onPressIn={this._onPressIn.bind(this)}
+                onPressOut={this._onPressOut.bind(this)}
+                >
+              <Text style={styles.welcome}>
+                点击录制关键词
+              </Text>
+            </TouchableHighlight>
+            <Text style={styles.instructions}>
+              请录音您要搜索的关键词
+            </Text>
+            <Text style={styles.instructions}>
+              录音时间不要超过30s哟
+            </Text>
+            <TouchableHighlight
+                onPress={this._toText.bind(this)}
+                >
+              <Text style={styles.instructions}>
+                点击返回文字输入
+              </Text>
+            </TouchableHighlight>
+          </View>
+      );
+    }
+
+    if (this.state.pageStatus === 21) {
       return (
           <View>
             <ActivityIndicator
@@ -212,25 +318,40 @@ export default class SetKey extends Component {
           </View>
       );
     }
-    return (
-        <View style={styles.container}>
-          <TouchableHighlight
-              onLongPress={this._longPress.bind(this)}
-              onPressIn={this._onPressIn.bind(this)}
-              onPressOut={this._onPressOut.bind(this)}
-              >
-            <Text style={styles.welcome}>
-              点击录制关键词
-            </Text>
-          </TouchableHighlight>
-          <Text style={styles.instructions}>
-            请录音您要搜索的关键词
-          </Text>
-          <Text style={styles.instructions}>
-            录音时间不要超过30s哟
-          </Text>
-        </View>
-    );
+
+    if (this.state.pageStatus === 22) {
+      return (
+          <View>
+            <View>
+              <Text style={styles.instructions}>
+                请问您说的是：
+              </Text>
+              <Text style={styles.instructions}>
+                {this.state.say}
+              </Text>
+              <Text style={styles.instructions}>
+                吗？
+              </Text>
+            </View>
+            <View>
+              <Text style={styles.welcome}>
+                设置的关键字为：
+              </Text>
+              <Text style={styles.welcome}>
+                {this.state.keyWordValue}
+              </Text>
+            </View>
+            <View>
+              <Button icon={{name: 'cached'}} title='确定'
+                      onPress={this._submit.bind(this)}
+                  />
+              <Button icon={{name: 'cached'}} title='重新设置'
+                      onPress={this._toAudio.bind(this)}
+                  />
+            </View>
+          </View>
+      );
+    }
   }
 }
 
