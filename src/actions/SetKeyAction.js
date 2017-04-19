@@ -23,9 +23,8 @@ export default new class extends BaseAction {
    */
   async setAudioKey(filePath) {
     const res = await HttpUtil.uploadFile('/sentence/text', [filePath]);
-    console.log(res.json);
-    const keyWord = res.json.result;
-    this.dispatch(ActionType.KEY_WORDS_SET_AUDIO_KEY_WORDS, {say:'请帮我搜索梅西', keyWord:'梅西'});
+    const result = res.json;
+    this.dispatch(ActionType.KEY_WORDS_SET_AUDIO_KEY_WORDS, result);
   }
 
   /**

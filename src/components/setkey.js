@@ -40,6 +40,7 @@ export default class SetKey extends Component {
     const temp = new Date().getTime();
     this.state = {
       pageStatus: 10, // 10：文本输入， 20：语音输入， 21：语音输入处理页面， 22：语音输入结果确认页面
+      audioResult: {},
       currentTime: 0.0,
       recording: false,
       stoppedRecording: false,
@@ -212,9 +213,12 @@ export default class SetKey extends Component {
    * @private
    */
   async _submit() {
-    await SetKeyAction.setKey(this.state.keyWordValue);
-    const { goBack } = this.props.navigation;
-    goBack();
+    const keyWordValue = this.state.keyWordValue;
+    if (keyWordValue) {
+      await SetKeyAction.setKey(keyWordValue);
+      const { goBack } = this.props.navigation;
+      goBack();
+    }
   }
 
   /**
@@ -239,14 +243,19 @@ export default class SetKey extends Component {
 
   /**
    *
-   * @param data
+   * @param audioResult
    * @private
    */
-  _confirmAudioKeyWord(data){
+  _confirmAudioKeyWord(audioResult) {
+    const {result} = audioResult;
+    let keyWordValue;
+    if (result) {
+      keyWordValue = result.text;
+    }
     this.setState(Util.mix(this.state, {
       pageStatus: 22,
-      say: data.say,
-      keyWordValue: data.keyWord
+      audioResult,
+      keyWordValue
     }));
   }
 
@@ -320,27 +329,44 @@ export default class SetKey extends Component {
     }
 
     if (this.state.pageStatus === 22) {
+      const {code, result} = this.state.audioResult;
+      let view = null;
+      if (code === '1') {
+        view = (
+            <View>
+              <View>
+                <Text style={styles.instructions}>
+                  请问您说的是：
+                </Text>
+                <Text style={styles.instructions}>
+                  {result.sentence}
+                </Text>
+                <Text style={styles.instructions}>
+                  吗？
+                </Text>
+              </View>
+              <View>
+                <Text style={styles.welcome}>
+                  设置的关键字为：
+                </Text>
+                <Text style={styles.welcome}>
+                  {result.text}
+                </Text>
+              </View>
+            </View>
+        );
+      } else {
+        view = (
+            <View>
+              <Text style={styles.instructions}>
+                抱歉！我没听懂你说什么。。。
+              </Text>
+            </View>
+        );
+      }
       return (
           <View>
-            <View>
-              <Text style={styles.instructions}>
-                请问您说的是：
-              </Text>
-              <Text style={styles.instructions}>
-                {this.state.say}
-              </Text>
-              <Text style={styles.instructions}>
-                吗？
-              </Text>
-            </View>
-            <View>
-              <Text style={styles.welcome}>
-                设置的关键字为：
-              </Text>
-              <Text style={styles.welcome}>
-                {this.state.keyWordValue}
-              </Text>
-            </View>
+            {view}
             <View>
               <Button icon={{name: 'cached'}} title='确定'
                       onPress={this._submit.bind(this)}
