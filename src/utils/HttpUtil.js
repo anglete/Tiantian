@@ -72,7 +72,7 @@ export default new class {
   buildQueryString(url, params) {
     const paramsArray = [];
     //拼接参数
-    Object.keys(params).forEach(key => paramsArray.push(key + '=' + params[key]))
+    Object.keys(params).forEach(key => paramsArray.push(key + '=' + params[key]));
     if (url.search(/\?/) === -1) {
       url += '?' + paramsArray.join('&')
     } else {

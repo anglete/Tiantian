@@ -27,5 +27,5 @@ const app = StackNavigator({
   }
 });
 
-
+console.disableYellowBox = true;
 AppRegistry.registerComponent('test', () => app);

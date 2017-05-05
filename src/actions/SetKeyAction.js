@@ -38,6 +38,10 @@ export default new class extends BaseAction {
     this.dispatch(ActionType.KEY_WORDS_SET_KEY_WORDS, keys);
   }
 
+  /**
+   *
+   * @param keys
+   */
   async cancelKey(keys) {
     if (!Array.isArray(keys)) {
       keys = keys.split(' '); // 多个key用空格分隔

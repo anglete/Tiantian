@@ -3,7 +3,7 @@
  */
 
 import BaseStore from 'BaseStore';
-import ActinType from 'ActionType';
+import ActionType from 'ActionType';
 import Consts from 'Consts';
 import Config from 'Config';
 
@@ -12,10 +12,15 @@ export default new class extends BaseStore {
     super();
   }
 
+  /**
+   *
+   * @param keyWords
+   * @returns {*}
+   */
   async addKeyWords(keyWords) {
     const len = Config.getConfig('keywords.store.length');
-    let currents = await this.get(Consts.KEY_STORAGE_CURRENT_KEYWORDS) || [];
-    let histories = await this.get(Consts.KEY_STORAGE_HISTORY_KEYWORDS) || [];
+    let currents = await this.get(Consts.KEY_STORAGE_CURRENT_KEYWORDS, []);
+    let histories = await this.get(Consts.KEY_STORAGE_HISTORY_KEYWORDS, []);
     for (let keyWord of keyWords) {
       const i = currents.indexOf(keyWord);
       if (i > -1) {
@@ -42,10 +47,15 @@ export default new class extends BaseStore {
     return currents;
   }
 
+  /**
+   *
+   * @param keyWords
+   * @returns {*}
+   */
   async cancelKeyWords(keyWords) {
     const len = Config.getConfig('keywords.store.length');
-    let currents = await this.get(Consts.KEY_STORAGE_CURRENT_KEYWORDS) || [];
-    let histories = await this.get(Consts.KEY_STORAGE_HISTORY_KEYWORDS) || [];
+    let currents = await this.get(Consts.KEY_STORAGE_CURRENT_KEYWORDS, []);
+    let histories = await this.get(Consts.KEY_STORAGE_HISTORY_KEYWORDS, []);
     for (let keyWord of keyWords) {
       const i = currents.indexOf(keyWord);
       if (i < 0) {
@@ -65,22 +75,26 @@ export default new class extends BaseStore {
     return currents;
   }
 
+  /**
+   *
+   * @returns {Function}
+   */
   getDispatchRegister() {
     return async (action) => {
       const actionType = action.actionType;
       const data = action.data;
       switch (actionType) {
-        case ActinType.KEY_WORDS_SET_KEY_WORDS:
+        case ActionType.KEY_WORDS_SET_KEY_WORDS:
         {
           const currents = await this.addKeyWords(data);
           return this.emit(Consts.KEY_EVENT_CHANGE_KEY_WORD, currents);
         }
-        case ActinType.KEY_WORDS_CANCEL_KEY_WORDS:
+        case ActionType.KEY_WORDS_CANCEL_KEY_WORDS:
         {
           const currents = await this.cancelKeyWords(data);
           return this.emit(Consts.KEY_EVENT_CHANGE_KEY_WORD, currents);
         }
-        case ActinType.KEY_WORDS_SET_AUDIO_KEY_WORDS:
+        case ActionType.KEY_WORDS_SET_AUDIO_KEY_WORDS:
         {
           return this.emit(Consts.KEY_EVENT_SET_AUDIO_KEY_WORD, data);
         }
